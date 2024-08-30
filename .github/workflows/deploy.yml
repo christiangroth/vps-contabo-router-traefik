@@ -1,0 +1,56 @@
+name: Docker Stack Deployment
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: appleboy/ssh-action@v1.0.3
+      env:
+        GIT_PROJECT: "vps-contabo-router-traefik"
+        DOCKER_STACK: "router-traefik"
+        REPLACE_CERTIFICATESRESOLVERS_LE_ACME_EMAIL: ${{ secrets.REPLACE_CERTIFICATESRESOLVERS_LE_ACME_EMAIL }}
+        TRAEFIK_HTTP_ROUTERS_HOST_RULE: ${{ secrets.TRAEFIK_HTTP_ROUTERS_HOST_RULE }}
+        REPLACE_TRAEFIK_HTTP_MIDDLEWARES_API_AUTH_BASICAUTH_USERS: ${{ secrets.REPLACE_TRAEFIK_HTTP_MIDDLEWARES_API_AUTH_BASICAUTH_USERS }}
+      with:
+        host: ${{ secrets.CONTABO_SSH_HOST }}
+        username: github-deployer
+        key: ${{ secrets.CONTABO_SSH_PRIVATE_KEY }}
+        port: 22
+        envs: GIT_PROJECT,DOCKER_STACK,REPLACE_CERTIFICATESRESOLVERS_LE_ACME_EMAIL,TRAEFIK_HTTP_ROUTERS_HOST_RULE,REPLACE_TRAEFIK_HTTP_MIDDLEWARES_API_AUTH_BASICAUTH_USERS
+        script_stop: true # stop on first failure
+        script: |
+          echo "removing old git repo clone"
+          rm -rf $GIT_PROJECT
+          
+          echo "cloning git repo"
+          GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" git clone --depth 1 git@github.com:christiangroth/$GIT_PROJECT.git $GIT_PROJECT
+          cd $GIT_PROJECT
+          
+          echo "deploying docker stack"
+          CERTIFICATESRESOLVERS_LE_ACME_EMAIL=$REPLACE_CERTIFICATESRESOLVERS_LE_ACME_EMAIL \
+            TRAEFIK_HTTP_ROUTERS_HOST_RULE=$TRAEFIK_HTTP_ROUTERS_HOST_RULE \
+            TRAEFIK_HTTP_MIDDLEWARES_API_AUTH_BASICAUTH_USERS=$REPLACE_TRAEFIK_HTTP_MIDDLEWARES_API_AUTH_BASICAUTH_USERS \
+            docker stack deploy --detach=false --prune --with-registry-auth --resolve-image changed -c docker-stack.yml $DOCKER_STACK
+          sleep 5
+          
+          echo
+          echo "----- ----- -----"
+          echo "----- ----- -----"
+          echo "----- ----- -----"
+          echo
+          
+          docker stack ls
+          echo
+          docker stack services $DOCKER_STACK
+          echo
+          docker stack ps $DOCKER_STACK
+          
+          echo "removing git repo clone"
+          cd ..
+          rm -rf $GIT_PROJECT
