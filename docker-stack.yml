@@ -20,7 +20,7 @@ services:
       - "--entrypoints.websecure.http3"
       - "--certificatesResolvers.le.acme.email=${CERTIFICATESRESOLVERS_LE_ACME_EMAIL:?please export CERTIFICATESRESOLVERS_LE_ACME_EMAIL}"
       - "--certificatesResolvers.le.acme.storage=/external/data/acme.json"
-      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=websecure"
     ports:
       - 80:80
       - 443:443
