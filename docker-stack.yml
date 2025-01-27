@@ -11,7 +11,6 @@ services:
       - "--providers.swarm.exposedByDefault=false"
       - "--providers.swarm.network=global_router"
       - "--entryPoints.web.address=:80"
-      - "--entrypoints.web.http.tls.certresolver=le"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http3"
@@ -21,7 +20,7 @@ services:
       - "--entrypoints.websecure.http3"
       - "--certificatesResolvers.le.acme.email=${CERTIFICATESRESOLVERS_LE_ACME_EMAIL:?please export CERTIFICATESRESOLVERS_LE_ACME_EMAIL}"
       - "--certificatesResolvers.le.acme.storage=/external/data/acme.json"
-      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=websecure"
+      - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
     ports:
       - 80:80
       - 443:443
