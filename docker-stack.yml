@@ -11,6 +11,7 @@ services:
       - "--providers.swarm.exposedByDefault=false"
       - "--providers.swarm.network=global_router"
       - "--entryPoints.web.address=:80"
+      - "--entrypoints.web.http.tls.certresolver=le"
       - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
       - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
       - "--entrypoints.web.http3"
