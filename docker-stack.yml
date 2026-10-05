@@ -1,4 +1,4 @@
-version: "3"
+version: "3.8"
 
 services:
   traefik:
@@ -22,9 +22,17 @@ services:
       - "--certificatesResolvers.le.acme.storage=/external/data/acme.json"
       - "--certificatesResolvers.le.acme.httpChallenge=true"
       - "--certificatesResolvers.le.acme.httpChallenge.entryPoint=web"
+    # Host mode instead of the Swarm ingress routing mesh: the mesh replaces the source address
+    # with an internal 10.0.0.x, so Traefik and all services behind it would never see real client IPs.
     ports:
-      - 80:80
-      - 443:443
+      - target: 80
+        published: 80
+        protocol: tcp
+        mode: host
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
     networks:
       - global_router
     deploy:
